@@ -1,0 +1,5 @@
+{
+  "appId": "com.yourname.triptracker",
+  "appName": "TripTracker",
+  "webDir": "dist"
+}
