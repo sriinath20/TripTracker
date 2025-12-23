@@ -212,7 +212,35 @@ This file can be transferred to a phone via WhatsApp, Drive, or USB.
 ├── package.json
 └── vite.config.js
 ```
+---
+## Snapshots
+1. Setup
+![image alt](https://github.com/sriinath20/TripTracker/blob/42d136a9e5679eb5d0a7927de78207473ba43358/images/setup.png)
 
+2. Main Menu
+![image alt](https://github.com/sriinath20/TripTracker/blob/42d136a9e5679eb5d0a7927de78207473ba43358/images/mainMenu.png)
+
+3. Hamburger Menu
+![image alt](https://github.com/sriinath20/TripTracker/blob/42d136a9e5679eb5d0a7927de78207473ba43358/images/hamburgerMenu.png)
+
+4. Daily Analysis
+![image alt](https://github.com/sriinath20/TripTracker/blob/42d136a9e5679eb5d0a7927de78207473ba43358/images/dailyAnalysis.png)
+
+5. Day wise Analysis
+![image alt](https://github.com/sriinath20/TripTracker/blob/42d136a9e5679eb5d0a7927de78207473ba43358/images/dayAnalysis.png)
+
+6. Overall Stats
+![image alt](https://github.com/sriinath20/TripTracker/blob/42d136a9e5679eb5d0a7927de78207473ba43358/images/overallStats.png)
+
+7. Load Trip
+![image alt](https://github.com/sriinath20/TripTracker/blob/42d136a9e5679eb5d0a7927de78207473ba43358/images/loadFile.png)
+
+8. Export Report as PDF
+![image alt](https://github.com/sriinath20/TripTracker/blob/42d136a9e5679eb5d0a7927de78207473ba43358/images/exportReport.png)
+
+9. PDF Snap
+![image alt](https://github.com/sriinath20/TripTracker/blob/42d136a9e5679eb5d0a7927de78207473ba43358/images/reportPdf.png)
+---
 ---
 
 ## 🤝 Contributing
