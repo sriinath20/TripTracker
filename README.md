@@ -214,32 +214,23 @@ This file can be transferred to a phone via WhatsApp, Drive, or USB.
 ```
 ---
 ## Snapshots
-1. Setup
-![image alt](https://github.com/sriinath20/TripTracker/blob/42d136a9e5679eb5d0a7927de78207473ba43358/images/setup.png)
-
-2. Main Menu
-![image alt](https://github.com/sriinath20/TripTracker/blob/42d136a9e5679eb5d0a7927de78207473ba43358/images/mainMenu.png)
-
-3. Hamburger Menu
-![image alt](https://github.com/sriinath20/TripTracker/blob/42d136a9e5679eb5d0a7927de78207473ba43358/images/hamburgerMenu.png)
-
-4. Daily Analysis
-![image alt](https://github.com/sriinath20/TripTracker/blob/42d136a9e5679eb5d0a7927de78207473ba43358/images/dailyAnalysis.png)
-
-5. Day wise Analysis
-![image alt](https://github.com/sriinath20/TripTracker/blob/42d136a9e5679eb5d0a7927de78207473ba43358/images/dayAnalysis.png)
-
-6. Overall Stats
-![image alt](https://github.com/sriinath20/TripTracker/blob/42d136a9e5679eb5d0a7927de78207473ba43358/images/overallStats.png)
-
-7. Load Trip
-![image alt](https://github.com/sriinath20/TripTracker/blob/42d136a9e5679eb5d0a7927de78207473ba43358/images/loadFile.png)
-
-8. Export Report as PDF
-![image alt](https://github.com/sriinath20/TripTracker/blob/42d136a9e5679eb5d0a7927de78207473ba43358/images/exportReport.png)
-
-9. PDF Snap
-![image alt](https://github.com/sriinath20/TripTracker/blob/42d136a9e5679eb5d0a7927de78207473ba43358/images/reportPdf.png)
+<table>
+<tr>
+<td align="center"><b>Setup</b><br><img src="images/setup.png" width="250"/></td>
+<td align="center"><b>Main Menu</b><br><img src="images/mainMenu.png" width="250"/></td>
+<td align="center"><b>Hamburger Menu</b><br><img src="images/hamburgerMenu.png" width="250"/></td>
+</tr>
+<tr>
+<td align="center"><b>Daily Analysis</b><br><img src="images/dailyAnalysis.png" width="250"/></td>
+<td align="center"><b>Day-wise Analysis</b><br><img src="images/dayAnalysis.png" width="250"/></td>
+<td align="center"><b>Overall Stats</b><br><img src="images/overallStats.png" width="250"/></td>
+</tr>
+<tr>
+<td align="center"><b>Load Trip</b><br><img src="images/loadFile.png" width="250"/></td>
+<td align="center"><b>Export PDF</b><br><img src="images/exportReport.png" width="250"/></td>
+<td align="center"><b>PDF Preview</b><br><img src="images/reportPdf.png" width="250"/></td>
+</tr>
+</table>
 ---
 ---
 
