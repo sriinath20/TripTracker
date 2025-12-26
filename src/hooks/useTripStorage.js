@@ -60,7 +60,12 @@ export const useTripStorage = () => {
   // --- Android Native Export ---
   const exportData = async () => {
     const dataStr = JSON.stringify(data, null, 2);
-    const fileName = `triptracker_backup_${new Date().toISOString().split('T')[0]}.json`;
+    
+    // Dynamic Filename Logic
+    const activeTrip = data.trips.find(t => t.id === data.activeId) || data.trips[0];
+    const safeName = (activeTrip?.name || 'Trip').replace(/[^a-z0-9]/gi, '_');
+    const dateStr = new Date().toISOString().split('T')[0];
+    const fileName = `${safeName}_${dateStr}.json`;
 
     try {
       await Filesystem.writeFile({

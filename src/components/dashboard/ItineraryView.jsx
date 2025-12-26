@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { MapPin, GripVertical, Clock, Pencil, Trash2, Plus, ArrowUp, ArrowDown } from 'lucide-react';
 import { useTripContext } from '../../context/TripContext';
 import { ITINERARY_TYPES } from '../../utils/appUtils';
@@ -7,10 +7,19 @@ import { ItineraryFormModal } from '../modals/ItineraryFormModal';
 export const ItineraryView = ({ isDarkMode, themeClasses }) => {
   const { activeTrip, itinerary, actions } = useTripContext();
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
-  const [editingItem, setEditingItem] = useState(null); // { dayId, item }
+  const [editingItem, setEditingItem] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  // --- Local State for Drag & Drop ---
+  const [localItems, setLocalItems] = useState([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragItemIndex = useRef(null);
+  const dragOverItemIndex = useRef(null);
+  
+  const scrollContainerRef = useRef(null);
+  const scrollInterval = useRef(null);
 
-  // Helper: Format Time to AM/PM
+  // Helper: Format Time
   const formatTime = (timeStr) => {
     if (!timeStr) return '';
     const [h, m] = timeStr.split(':');
@@ -20,7 +29,7 @@ export const ItineraryView = ({ isDarkMode, themeClasses }) => {
     return `${hour12}:${m} ${ampm}`;
   };
 
-  // Initialize/Sync Itinerary Data structure with current trip duration
+  // 1. Calculate Days
   const days = useMemo(() => {
     const arr = [];
     const duration = Math.max(1, activeTrip.duration || 1);
@@ -45,7 +54,14 @@ export const ItineraryView = ({ isDarkMode, themeClasses }) => {
 
   const currentDay = days[selectedDayIndex] || days[0];
 
-  // --- Handlers ---
+  // 2. Sync Local State with Context (when not dragging)
+  useEffect(() => {
+    if (!isDragging) {
+      setLocalItems(currentDay.items);
+    }
+  }, [currentDay.items, isDragging]);
+
+  // --- CRUD Handlers ---
   const handleSaveItem = (formData) => {
     const newItems = [...currentDay.items];
     if (editingItem && editingItem.item) {
@@ -65,29 +81,97 @@ export const ItineraryView = ({ isDarkMode, themeClasses }) => {
     }
   };
 
-  // Drag and Drop Handlers
+  // --- Drag & Drop Handlers (Sortable List Style) ---
+
+  const stopAutoScroll = () => {
+    if (scrollInterval.current) {
+      clearInterval(scrollInterval.current);
+      scrollInterval.current = null;
+    }
+  };
+
   const handleDragStart = (e, index) => {
-    e.dataTransfer.setData("text/plain", index.toString());
-    e.dataTransfer.effectAllowed = "move";
+    setIsDragging(true);
+    dragItemIndex.current = index;
+    dragOverItemIndex.current = index;
+    // e.dataTransfer.effectAllowed = "move"; 
+    // Hack to remove ghost image if desired, otherwise standard ghost is fine
   };
 
-  const handleDrop = (e, targetIndex) => {
+  const handleDragOver = (e) => {
     e.preventDefault();
-    const sourceIndex = parseInt(e.dataTransfer.getData("text/plain"));
-    if (isNaN(sourceIndex) || sourceIndex === targetIndex) return;
-
-    const newItems = [...currentDay.items];
-    const [movedItem] = newItems.splice(sourceIndex, 1);
-    newItems.splice(targetIndex, 0, movedItem);
     
-    actions.updateItineraryDay(currentDay.id, newItems);
+    const container = scrollContainerRef.current;
+    if (container) {
+      const { top, bottom, height } = container.getBoundingClientRect();
+      const mouseY = e.clientY;
+      
+      // Auto Scroll Zones (Top 15% and Bottom 15%)
+      const zoneSize = 100; // px
+      
+      stopAutoScroll();
+
+      if (mouseY < top + zoneSize) {
+        // Scroll Up
+        scrollInterval.current = setInterval(() => {
+          container.scrollTop -= 10;
+        }, 16);
+      } else if (mouseY > bottom - zoneSize) {
+        // Scroll Down
+        scrollInterval.current = setInterval(() => {
+          container.scrollTop += 10;
+        }, 16);
+      }
+    }
   };
 
-  const handleMove = (index, direction) => {
-    const newIndex = index + direction;
-    if (newIndex < 0 || newIndex >= currentDay.items.length) return;
+  const handleDragEnter = (e, index) => {
+    // This function handles the reordering (swapping) logic visual
+    dragOverItemIndex.current = index;
     
-    const newItems = [...currentDay.items];
+    const draggedIdx = dragItemIndex.current;
+    if (draggedIdx === null || draggedIdx === index) return;
+
+    // Create a copy and swap items locally for visual feedback
+    const newList = [...localItems];
+    const item = newList[draggedIdx];
+    
+    // Remove from old index
+    newList.splice(draggedIdx, 1);
+    // Insert at new index
+    newList.splice(index, 0, item);
+    
+    setLocalItems(newList);
+    dragItemIndex.current = index; // Update reference to track new position
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    stopAutoScroll();
+    
+    // Commit changes to Context
+    if (dragItemIndex.current !== null) {
+      actions.updateItineraryDay(currentDay.id, localItems);
+    }
+    
+    setIsDragging(false);
+    dragItemIndex.current = null;
+    dragOverItemIndex.current = null;
+  };
+
+  const handleDragEnd = () => {
+    stopAutoScroll();
+    setIsDragging(false);
+    // If dropped, handleDrop handles save. If cancelled, this resets local state via useEffect dependency
+    dragItemIndex.current = null;
+    dragOverItemIndex.current = null;
+  };
+
+  // Manual Move for Mobile
+  const handleManualMove = (index, direction) => {
+    const newIndex = index + direction;
+    if (newIndex < 0 || newIndex >= localItems.length) return;
+    const newItems = [...localItems];
     const temp = newItems[index];
     newItems[index] = newItems[newIndex];
     newItems[newIndex] = temp;
@@ -98,29 +182,41 @@ export const ItineraryView = ({ isDarkMode, themeClasses }) => {
     <div className="flex flex-col h-full animate-in fade-in duration-500 relative">
       
       {/* Day Selector */}
-      <div className="flex overflow-x-auto pb-4 gap-2 no-scrollbar mb-2 flex-shrink-0">
-        {days.map((day, idx) => (
-          <button
-            key={day.id}
-            onClick={() => setSelectedDayIndex(idx)}
-            className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-all border ${
-              selectedDayIndex === idx
-              ? 'bg-slate-800 text-white border-slate-800 shadow-md transform scale-105'
-              : `${themeClasses.card} ${themeClasses.subText} hover:bg-slate-100 dark:hover:bg-slate-800`
-            }`}
-          >
-            <div className="text-xs opacity-70">{new Date(day.date).toLocaleDateString(undefined, {weekday:'short'})}</div>
-            <div>{day.dayLabel}</div>
-          </button>
-        ))}
+      <div className="flex overflow-x-auto p-4 gap-3 no-scrollbar mb-2 flex-shrink-0">
+        {days.map((day, idx) => {
+            const dateObj = new Date(day.date);
+            const dateDisplay = dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+            return (
+              <button
+                key={day.id}
+                onClick={() => setSelectedDayIndex(idx)}
+                className={`flex-shrink-0 px-4 py-2 rounded-xl text-center transition-all border ${
+                  selectedDayIndex === idx
+                  ? 'bg-slate-800 text-white border-slate-800 shadow-md transform scale-105'
+                  : `${themeClasses.card} text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800`
+                }`}
+              >
+                <div className={`text-sm font-bold ${selectedDayIndex === idx ? 'text-white' : themeClasses.text}`}>
+                    {dateDisplay}
+                </div>
+                <div className={`text-xs uppercase tracking-wide mt-0.5 ${selectedDayIndex === idx ? 'text-slate-400' : 'text-slate-400'}`}>
+                    {day.dayLabel}
+                </div>
+              </button>
+            );
+        })}
       </div>
 
       {/* Timeline Container */}
-      <div className={`flex-1 rounded-2xl border p-4 sm:p-6 overflow-y-auto relative min-h-[400px] pb-24 ${themeClasses.card}`}>
+      <div 
+        ref={scrollContainerRef}
+        onDragOver={handleDragOver} // Handle scroll on container
+        className={`flex-1 rounded-2xl border p-4 sm:p-6 overflow-y-auto relative min-h-[400px] pb-24 ${themeClasses.card}`}
+      >
         <div className="absolute left-6 sm:left-8 top-6 bottom-6 w-0.5 bg-slate-200 dark:bg-slate-700"></div>
         
-        <div className="space-y-6 relative">
-          {currentDay.items.length === 0 ? (
+        <div className="space-y-4 relative">
+          {localItems.length === 0 ? (
              <div className="text-center py-20 pl-8">
                 <MapPin className="mx-auto text-slate-300 mb-2" size={32}/>
                 <p className="text-slate-400 italic">No plans yet for {currentDay.dayLabel}.</p>
@@ -132,27 +228,36 @@ export const ItineraryView = ({ isDarkMode, themeClasses }) => {
                 </button>
              </div>
           ) : (
-            currentDay.items.map((item, idx) => {
+            localItems.map((item, idx) => {
               const typeConfig = ITINERARY_TYPES[item.type] || ITINERARY_TYPES.place;
+              // Check if this item is currently being dragged (ghost)
+              const isBeingDragged = isDragging && dragItemIndex.current === idx;
               
               return (
                 <div 
                   key={item.id}
                   draggable
                   onDragStart={(e) => handleDragStart(e, idx)}
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={(e) => handleDrop(e, idx)}
-                  className="relative pl-8 sm:pl-10 group"
+                  onDragEnter={(e) => handleDragEnter(e, idx)} // Swap trigger
+                  onDragEnd={handleDragEnd}
+                  onDrop={handleDrop} // Commit trigger
+                  onDragOver={(e) => e.preventDefault()} // Allow drop
+                  className={`relative pl-8 sm:pl-10 group transition-transform duration-200 ${isBeingDragged ? 'opacity-50 scale-95' : 'opacity-100'}`}
                 >
                   {/* Timeline Dot */}
                   <div className={`absolute left-0 top-3 w-4 h-4 rounded-full border-2 border-white dark:border-slate-900 shadow-sm z-10 ${typeConfig.bg}`}></div>
                   
                   {/* Card */}
-                  <div className={`p-4 rounded-xl border transition-all hover:shadow-md ${isDarkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-slate-100 shadow-sm'} group-hover:border-slate-300 dark:group-hover:border-slate-600`}>
+                  <div className={`p-4 rounded-xl border transition-all ${
+                      isBeingDragged 
+                        ? 'border-dashed border-slate-400 bg-slate-50 dark:bg-slate-800/30' 
+                        : isDarkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-slate-100 shadow-sm'
+                    } ${!isBeingDragged && 'group-hover:border-slate-300 dark:group-hover:border-slate-600'}`}>
+                     
                      <div className="flex justify-between items-start">
                         <div className="flex gap-3">
-                           {/* Drag Handle (Desktop) */}
-                           <div className="cursor-grab text-slate-300 hover:text-slate-500 hidden sm:flex items-center pt-1">
+                           {/* Drag Handle */}
+                           <div className="cursor-grab text-slate-300 hover:text-slate-500 hidden sm:flex items-center pt-1 active:cursor-grabbing">
                               <GripVertical size={16} />
                            </div>
 
@@ -174,24 +279,23 @@ export const ItineraryView = ({ isDarkMode, themeClasses }) => {
                         </div>
 
                         {/* Actions */}
-                        <div className="flex items-center gap-2">
-                            {/* Mobile Reorder Buttons */}
+                        <div className="flex items-center gap-3 mr-4">
                             <div className="flex flex-col sm:hidden mr-2">
-                                <button onClick={() => handleMove(idx, -1)} className="p-1 text-slate-300 hover:text-blue-500 disabled:opacity-30" disabled={idx===0}><ArrowUp size={14}/></button>
-                                <button onClick={() => handleMove(idx, 1)} className="p-1 text-slate-300 hover:text-blue-500 disabled:opacity-30" disabled={idx===currentDay.items.length-1}><ArrowDown size={14}/></button>
+                                <button onClick={() => handleManualMove(idx, -1)} className="p-1 text-slate-300 hover:text-blue-500 disabled:opacity-30" disabled={idx===0}><ArrowUp size={14}/></button>
+                                <button onClick={() => handleManualMove(idx, 1)} className="p-1 text-slate-300 hover:text-blue-500 disabled:opacity-30" disabled={idx===localItems.length-1}><ArrowDown size={14}/></button>
                             </div>
 
                             <button 
                               onClick={() => { setEditingItem({ item }); setIsModalOpen(true); }}
                               className={`p-2 rounded-full transition-colors ${isDarkMode ? 'hover:bg-slate-700 text-slate-400' : 'hover:bg-slate-100 text-slate-400'}`}
                             >
-                              <Pencil size={16} />
+                              <Pencil size={18} />
                             </button>
                             <button 
                               onClick={() => handleDeleteItem(item.id)}
                               className={`p-2 rounded-full transition-colors hover:bg-red-50 hover:text-red-500 text-slate-300`}
                             >
-                              <Trash2 size={16} />
+                              <Trash2 size={18} />
                             </button>
                         </div>
                      </div>

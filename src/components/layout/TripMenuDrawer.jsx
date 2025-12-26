@@ -205,14 +205,14 @@ export const TripMenuDrawer = ({ isOpen, onClose, isDarkMode, themeClasses, onOp
                  className={`py-3 rounded-lg border font-medium flex flex-col items-center justify-center gap-1 transition-colors ${isDarkMode ? 'border-slate-700 text-emerald-400 hover:bg-slate-800' : 'border-slate-200 text-emerald-600 hover:bg-emerald-50'}`}
                >
                  <Download size={18} />
-                 <span className="text-xs">Backup JSON</span>
+                 <span className="text-xs">Backup Trip</span>
                </button>
                <button 
                  onClick={() => fileInputRef.current.click()}
                  className={`py-3 rounded-lg border font-medium flex flex-col items-center justify-center gap-1 transition-colors ${isDarkMode ? 'border-slate-700 text-blue-400 hover:bg-slate-800' : 'border-slate-200 text-blue-600 hover:bg-blue-50'}`}
                >
                  <Upload size={18} />
-                 <span className="text-xs">Restore JSON</span>
+                 <span className="text-xs">Restore Trip</span>
                </button>
                <input type="file" ref={fileInputRef} className="hidden" accept=".json" onChange={onFileSelect} />
              </div>
