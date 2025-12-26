@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Wallet, BarChart3, PieChart } from 'lucide-react';
+import { Wallet, BarChart3, PieChart, Map as MapIcon } from 'lucide-react';
 import { BudgetOverview } from './BudgetOverview';
 import { ExpenseTable } from './ExpenseTable';
 import { DailyBreakdown } from './DailyBreakdown';
 import { StatsPanel } from './StatsPanel';
+import { ItineraryView } from './ItineraryView'; 
 
 export const Dashboard = ({ isDarkMode, themeClasses }) => {
   const [activeTab, setActiveTab] = useState('transactions');
@@ -23,8 +24,9 @@ export const Dashboard = ({ isDarkMode, themeClasses }) => {
           <div className="flex gap-2 mb-4 overflow-x-auto pb-1 no-scrollbar">
             {[
               { id: 'transactions', icon: Wallet, label: 'Transactions' },
-              { id: 'daily', icon: BarChart3, label: 'Daily Analysis' },
-              { id: 'stats', icon: PieChart, label: 'Stats & Insights' },
+              { id: 'daily', icon: BarChart3, label: 'Analysis' },
+              { id: 'itinerary', icon: MapIcon, label: 'Planner' }, // New Tab
+              { id: 'stats', icon: PieChart, label: 'Stats' },
             ].map(tab => (
               <button 
                 key={tab.id}
@@ -49,6 +51,9 @@ export const Dashboard = ({ isDarkMode, themeClasses }) => {
             )}
             {activeTab === 'daily' && (
               <DailyBreakdown isDarkMode={isDarkMode} themeClasses={themeClasses} />
+            )}
+             {activeTab === 'itinerary' && (
+              <ItineraryView isDarkMode={isDarkMode} themeClasses={themeClasses} />
             )}
             {activeTab === 'stats' && (
               <StatsPanel isDarkMode={isDarkMode} themeClasses={themeClasses} />
