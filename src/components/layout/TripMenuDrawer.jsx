@@ -40,6 +40,12 @@ export const TripMenuDrawer = ({ isOpen, onClose, isDarkMode, themeClasses, onOp
     event.target.value = '';
   };
 
+  // Helper to move cursor to the end of input
+  const moveCursorToEnd = (e) => {
+    const val = e.target.value;
+    e.target.setSelectionRange(val.length, val.length);
+  };
+
   return (
     <div className={`fixed inset-0 z-50 transition-all duration-300 ${isOpen ? 'visible' : 'invisible'}`}>
       <div 
@@ -114,6 +120,8 @@ export const TripMenuDrawer = ({ isOpen, onClose, isDarkMode, themeClasses, onOp
                  <input 
                    type="text" 
                    value={activeTrip.name} 
+                   onClick={moveCursorToEnd}
+                   onFocus={moveCursorToEnd}
                    onChange={(e) => actions.updateTripSettings({ name: e.target.value })} 
                    className={`w-full p-2 border rounded-lg text-sm focus:ring-2 outline-none font-medium ${themeClasses.input}`} 
                  />
@@ -130,6 +138,24 @@ export const TripMenuDrawer = ({ isOpen, onClose, isDarkMode, themeClasses, onOp
                     />
                   </div>
                   <div>
+                    <span className={`text-sm block mb-1 ${themeClasses.subText}`}>Duration (Days)</span>
+                    <input 
+                      type="number" 
+                      min="1"
+                      onClick={moveCursorToEnd}
+                      onFocus={moveCursorToEnd}
+                      value={activeTrip.duration || ''} 
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value);
+                        actions.updateTripSettings({ duration: val > 0 ? val : 1 });
+                      }} 
+                      className={`w-full p-2 border rounded-lg text-sm ${themeClasses.input}`} 
+                    />
+                  </div>
+               </div>
+
+               <div className="grid grid-cols-2 gap-4">
+                  <div>
                     <span className={`text-sm block mb-1 ${themeClasses.subText}`}>Currency</span>
                     <select 
                         value={activeTrip.currency}
@@ -139,19 +165,30 @@ export const TripMenuDrawer = ({ isOpen, onClose, isDarkMode, themeClasses, onOp
                         {currencies.map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
                   </div>
-               </div>
-
-               <div>
-                 <span className={`text-sm block mb-1 ${themeClasses.subText}`}>Total Budget</span>
-                 <div className="relative">
-                   <span className="absolute left-3 top-2 text-slate-400 font-bold">{activeTrip.currency}</span>
-                   <input 
-                     type="number" 
-                     value={activeTrip.budget} 
-                     onChange={(e) => actions.updateTripSettings({ budget: parseFloat(e.target.value) || 0 })} 
-                     className={`w-full pl-8 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none font-mono font-medium ${themeClasses.input}`} 
-                   />
-                 </div>
+                  <div>
+                    <span className={`text-sm block mb-1 ${themeClasses.subText}`}>Total Budget</span>
+                    <div className="relative">
+                      <span className="absolute left-3 top-2 text-slate-400 font-bold">{activeTrip.currency}</span>
+                      <input 
+                        type="tel"
+                        pattern="[0-9]*"
+                        inputMode="numeric"
+                        value={activeTrip.budget === 0 ? '' : activeTrip.budget} 
+                        onClick={moveCursorToEnd}
+                        onFocus={moveCursorToEnd}
+                        onChange={(e) => {
+                            const val = e.target.value;
+                            if (val === '') {
+                                actions.updateTripSettings({ budget: 0 });
+                            } else if (/^\d*\.?\d*$/.test(val)) {
+                                actions.updateTripSettings({ budget: parseFloat(val) });
+                            }
+                        }}
+                        className={`w-full pl-8 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none font-mono font-medium ${themeClasses.input}`} 
+                        placeholder="0"
+                      />
+                    </div>
+                  </div>
                </div>
              </div>
           </div>
@@ -168,14 +205,14 @@ export const TripMenuDrawer = ({ isOpen, onClose, isDarkMode, themeClasses, onOp
                  className={`py-3 rounded-lg border font-medium flex flex-col items-center justify-center gap-1 transition-colors ${isDarkMode ? 'border-slate-700 text-emerald-400 hover:bg-slate-800' : 'border-slate-200 text-emerald-600 hover:bg-emerald-50'}`}
                >
                  <Download size={18} />
-                 <span className="text-xs">Backup JSON</span>
+                 <span className="text-xs">Backup Trip</span>
                </button>
                <button 
                  onClick={() => fileInputRef.current.click()}
                  className={`py-3 rounded-lg border font-medium flex flex-col items-center justify-center gap-1 transition-colors ${isDarkMode ? 'border-slate-700 text-blue-400 hover:bg-slate-800' : 'border-slate-200 text-blue-600 hover:bg-blue-50'}`}
                >
                  <Upload size={18} />
-                 <span className="text-xs">Restore JSON</span>
+                 <span className="text-xs">Restore Trip</span>
                </button>
                <input type="file" ref={fileInputRef} className="hidden" accept=".json" onChange={onFileSelect} />
              </div>

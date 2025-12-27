@@ -1,3 +1,5 @@
+import { BedDouble, Coffee, Utensils, Map as MapIcon } from 'lucide-react';
+
 // --- Constants ---
 export const categories = ['Transport', 'Food', 'Accommodation', 'Activity', 'Shopping', 'Misc'];
 export const methods = ['Cash', 'Card', 'UPI'];
@@ -11,11 +13,62 @@ export const categoryColors = {
   Misc: 'bg-slate-400 text-slate-400'
 };
 
-// CHECK THIS BLOCK
 export const methodColors = {
   Cash: 'bg-emerald-500',
   Card: 'bg-purple-600',
   UPI: 'bg-blue-500',
+};
+
+// --- Itinerary Constants ---
+export const ITINERARY_TYPES = {
+  checkin: { 
+    label: 'Check-in', 
+    icon: BedDouble, 
+    color: 'text-indigo-500', 
+    bg: 'bg-indigo-500',
+    timeLabel1: 'Check-in Time',
+    showTime2: false
+  },
+  checkout: { 
+    label: 'Check-out', 
+    icon: BedDouble, 
+    color: 'text-slate-500', 
+    bg: 'bg-slate-500',
+    timeLabel1: 'Check-out Time',
+    showTime2: false
+  },
+  breakfast: { 
+    label: 'Breakfast', 
+    icon: Coffee, 
+    color: 'text-orange-500', 
+    bg: 'bg-orange-500',
+    timeLabel1: 'Start Time',
+    timeLabel2: 'End Time'
+  },
+  lunch: { 
+    label: 'Lunch', 
+    icon: Utensils, 
+    color: 'text-orange-600', 
+    bg: 'bg-orange-600',
+    timeLabel1: 'Start Time',
+    timeLabel2: 'End Time'
+  },
+  dinner: { 
+    label: 'Dinner', 
+    icon: Utensils, 
+    color: 'text-red-500', 
+    bg: 'bg-red-500',
+    timeLabel1: 'Start Time',
+    timeLabel2: 'End Time'
+  },
+  place: { 
+    label: 'Visit', 
+    icon: MapIcon, 
+    color: 'text-emerald-500', 
+    bg: 'bg-emerald-500',
+    timeLabel1: 'Reach Time',
+    timeLabel2: 'Leave Time'
+  },
 };
 
 // ... keep the rest of the file (getCalculatedDate, etc.)
@@ -55,51 +108,4 @@ export const getDayFromDate = (startDateStr, targetDateStr) => {
   } catch (e) {
     return 'Day 1';
   }
-};
-
-// --- Math & Stats Helpers ---
-
-export const calculateCategoryBreakdown = (expenses, totalSpent) => {
-  return categories.map(cat => {
-    const catTotal = expenses
-      .filter(e => e.category === cat)
-      .reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
-    return { 
-        name: cat, 
-        total: catTotal, 
-        percentage: totalSpent > 0 ? (catTotal / totalSpent) * 100 : 0 
-    };
-  }).filter(item => item.total > 0).sort((a, b) => b.total - a.total);
-};
-
-export const calculateMethodBreakdown = (expenses, totalSpent) => {
-  return methods.map(method => {
-    const total = expenses
-      .filter(e => e.method === method)
-      .reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
-    return { 
-        name: method, 
-        total, 
-        percentage: totalSpent > 0 ? (total / totalSpent) * 100 : 0 
-    };
-  }).filter(item => item.total > 0).sort((a, b) => b.total - a.total);
-};
-
-export const calculateDailyBreakdown = (expenses, allDayOptions) => {
-  return allDayOptions.map(day => {
-    const dayExpenses = expenses.filter(e => e.day === day);
-    const total = dayExpenses.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
-    const stacks = categories.map(cat => {
-      const catTotal = dayExpenses
-          .filter(e => e.category === cat)
-          .reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
-      return { 
-          category: cat, 
-          amount: catTotal, 
-          percent: total > 0 ? (catTotal / total) * 100 : 0 
-      };
-    }).filter(s => s.amount > 0);
-    
-    return { day, total, stacks, expenses: dayExpenses };
-  });
 };

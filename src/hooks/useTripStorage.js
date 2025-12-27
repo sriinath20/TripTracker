@@ -14,6 +14,9 @@ const DEFAULT_DATA = {
   expensesMap: {
     'default_trip': []
   },
+  itineraryMap: {
+    'default_trip': []
+  },
   activeId: 'default_trip'
 };
 
@@ -24,8 +27,15 @@ export const useTripStorage = () => {
       const v3Data = localStorage.getItem('trip_tracker_v3');
       if (v3Data) {
         const parsed = JSON.parse(v3Data);
-        if (parsed && Array.isArray(parsed.trips) && parsed.trips.length > 0) {
-          return parsed;
+        // Migration: Ensure itineraryMap exists for older versions
+        if (!parsed.itineraryMap) parsed.itineraryMap = {};
+        
+        // Ensure every trip has an entry in itineraryMap
+        if (Array.isArray(parsed.trips)) {
+             parsed.trips.forEach(t => {
+                 if (!parsed.itineraryMap[t.id]) parsed.itineraryMap[t.id] = [];
+             });
+             return parsed;
         }
       }
     } catch (e) {
@@ -50,10 +60,14 @@ export const useTripStorage = () => {
   // --- Android Native Export ---
   const exportData = async () => {
     const dataStr = JSON.stringify(data, null, 2);
-    const fileName = `triptracker_backup_${new Date().toISOString().split('T')[0]}.json`;
+    
+    // Dynamic Filename Logic
+    const activeTrip = data.trips.find(t => t.id === data.activeId) || data.trips[0];
+    const safeName = (activeTrip?.name || 'Trip').replace(/[^a-z0-9]/gi, '_');
+    const dateStr = new Date().toISOString().split('T')[0];
+    const fileName = `${safeName}_${dateStr}.json`;
 
     try {
-      // 1. Write file to native cache directory
       await Filesystem.writeFile({
         path: fileName,
         data: dataStr,
@@ -61,13 +75,11 @@ export const useTripStorage = () => {
         encoding: Encoding.UTF8,
       });
 
-      // 2. Get the URI
       const fileResult = await Filesystem.getUri({
         directory: Directory.Cache,
         path: fileName,
       });
 
-      // 3. Share via Android Intent
       await Share.share({
         title: 'TripTracker Backup',
         url: fileResult.uri,
